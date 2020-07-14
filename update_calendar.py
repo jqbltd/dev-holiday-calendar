@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-SCOPES = 'https://www.googleapis.com/auth/calendar.events'
+SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 START_YEAR_TEMPLATE = "{}-01-01T00:00:00Z"
 
 
