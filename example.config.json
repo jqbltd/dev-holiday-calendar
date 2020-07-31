@@ -1,7 +1,7 @@
 {
     "calendar_ids": {
         "holiday": "calendar_id_for_all_holidays",
-        "dev": "calendar_id_for_dev_holiday"
+        "dev": "calendar_id_for_dev_holidays"
     },
     "names": [
         "Homer S",
