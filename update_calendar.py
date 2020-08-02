@@ -29,7 +29,7 @@ def get_credentials():
             credentials.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            credentials = flow.run_local_server()
+            credentials = flow.run_console()
         
         with open('token.pickle', 'wb') as f:
             pickle.dump(credentials, f)
