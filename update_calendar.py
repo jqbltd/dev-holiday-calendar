@@ -96,12 +96,12 @@ def copy_calendar_events(calendar_events, config):
 
 def main():
     credentials = get_credentials()
-    calendar = build('calendar', 'v3', credentials=credentials)
+    service = build('calendar', 'v3', credentials=credentials)
     
     config = get_config()
     
-    clear_calendar_events(calendar.events(), config)
-    copy_calendar_events(calendar.events(), config)
+    clear_calendar_events(service.events(), config)
+    copy_calendar_events(service.events(), config)
 
 
 if __name__ == '__main__':
