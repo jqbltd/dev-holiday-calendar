@@ -64,7 +64,7 @@ def clear_calendar_events(calendar_events, config):
 
 def is_event_of_a_dev_user(event_summary, config):
     try:
-        name = event_summary.split(' - ')[1]
+        name = event_summary.split('-')[1].strip()
     except IndexError:
         return False
     
