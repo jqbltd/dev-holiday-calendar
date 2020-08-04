@@ -19,28 +19,58 @@ def get_config():
 
 def get_credentials():
     credentials = None
-    
+
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as f:
             credentials = pickle.load(f)
-    
+
     if not credentials or not credentials.valid:
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             credentials = flow.run_console()
-        
+
         with open('token.pickle', 'wb') as f:
             pickle.dump(credentials, f)
-    
+
     return credentials
+
+
+def clear_dev_calendar(calendar_events, config):
+    old_dev_holidays = get_calendar_events(calendar_events, config['calendar_ids']['dev'])
+
+    for holiday in old_dev_holidays:
+        calendar_events.delete(
+            calendarId=config['calendar_ids']['dev'], eventId=holiday['id']
+        ).execute()
+
+
+def add_dev_holidays(calendar_events, config):
+    all_holidays = get_calendar_events(calendar_events, config['calendar_ids']['holiday'])
+
+    dev_holidays = []
+    for holiday in all_holidays:
+        try:
+            name = holiday['summary'].split('-')[1].strip()
+        except (IndexError, KeyError):
+            continue
+
+        if name in config['names']:
+            dev_holidays.append({
+                'summary': holiday['summary'],
+                'start': {'date': holiday['start']['date']},
+                'end': {'date': holiday['end']['date']}
+            })
+
+    for holiday in dev_holidays:
+        calendar_events.insert(calendarId=config['calendar_ids']['dev'], body=holiday).execute()
 
 
 def get_calendar_events(calendar_events, calendar_id):
     last_year = datetime.now().year - 1
     start_time = START_YEAR_TEMPLATE.format(last_year)
-    
+
     events = []
     page_token = None
     while True:
@@ -54,54 +84,13 @@ def get_calendar_events(calendar_events, calendar_id):
     return events
 
 
-def clear_calendar_events(calendar_events, config):
-    events = get_calendar_events(calendar_events, config['calendar_ids']['dev'])
-    for event in events:
-        calendar_events.delete(
-            calendarId=config['calendar_ids']['dev'], eventId=event['id']
-        ).execute()
-
-
-def is_event_of_a_dev_user(event_summary, config):
-    try:
-        name = event_summary.split('-')[1].strip()
-    except IndexError:
-        return False
-    
-    return name in config['names']
-
-
-def copy_calendar_events(calendar_events, config):
-    events = get_calendar_events(calendar_events, config['calendar_ids']['holiday'])
-    for event in events:
-        try:
-            should_copy_event = is_event_of_a_dev_user(event['summary'], config)
-        except KeyError:
-            continue
-        
-        if should_copy_event:
-            event_body = {
-                'summary': event['summary'],
-                'start': {
-                    'date': event['start']['date'],
-                },
-                'end': {
-                    'date': event['end']['date'],
-                },
-            }
-            calendar_events.insert(
-                calendarId=config['calendar_ids']['dev'], body=event_body
-            ).execute()
-
-
 def main():
+    config = get_config()
     credentials = get_credentials()
     service = build('calendar', 'v3', credentials=credentials)
-    
-    config = get_config()
-    
-    clear_calendar_events(service.events(), config)
-    copy_calendar_events(service.events(), config)
+
+    clear_dev_calendar(service.events(), config)
+    add_dev_holidays(service.events(), config)
 
 
 if __name__ == '__main__':
