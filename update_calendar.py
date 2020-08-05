@@ -9,16 +9,22 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+CONFIG_PATH = os.path.join(DIR_PATH, 'config.json')
+TOKEN_PICKLE_PATH = os.path.join(DIR_PATH, 'token.pickle')
+CREDENTIALS_PATH = os.path.join(DIR_PATH, 'credentials.json')
+
+
 def get_config():
-    with open('config.json', 'rb') as f:
+    with open(CONFIG_PATH, 'rb') as f:
         return json.load(f)
 
 
 def get_credentials():
     credentials = None
 
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as f:
+    if os.path.exists(TOKEN_PICKLE_PATH):
+        with open(TOKEN_PICKLE_PATH, 'rb') as f:
             credentials = pickle.load(f)
 
     if not credentials or not credentials.valid:
@@ -26,12 +32,12 @@ def get_credentials():
             credentials.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json',
+                CREDENTIALS_PATH,
                 ['https://www.googleapis.com/auth/calendar.events']
             )
             credentials = flow.run_console()
 
-        with open('token.pickle', 'wb') as f:
+        with open(TOKEN_PICKLE_PATH, 'wb') as f:
             pickle.dump(credentials, f)
 
     return credentials
