@@ -91,8 +91,7 @@ def get_calendar_events(calendar_events, calendar_id):
 
 def main():
     config = get_config()
-    credentials = get_credentials()
-    service = build('calendar', 'v3', credentials=credentials)
+    service = build('calendar', 'v3', credentials=get_credentials())
 
     clear_dev_calendar(service.events(), config)
     add_dev_holidays(service.events(), config)
