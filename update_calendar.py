@@ -8,9 +8,6 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-SCOPES = ['https://www.googleapis.com/auth/calendar.events']
-START_YEAR_TEMPLATE = "{}-01-01T00:00:00Z"
-
 
 def get_config():
     with open('config.json', 'rb') as f:
@@ -28,7 +25,10 @@ def get_credentials():
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json',
+                ['https://www.googleapis.com/auth/calendar.events']
+            )
             credentials = flow.run_console()
 
         with open('token.pickle', 'wb') as f:
@@ -68,8 +68,7 @@ def add_dev_holidays(calendar_events, config):
 
 
 def get_calendar_events(calendar_events, calendar_id):
-    last_year = datetime.now().year - 1
-    start_time = START_YEAR_TEMPLATE.format(last_year)
+    start_time = f'{datetime.now().year - 1}-01-01T00:00:00Z'
 
     events = []
     page_token = None
