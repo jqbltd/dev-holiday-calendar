@@ -3,6 +3,7 @@ import os.path
 import pickle
 
 from datetime import datetime
+from time import sleep
 
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
@@ -55,6 +56,7 @@ def clear_dev_calendar(service, config):
             )
         )
     batch.execute()
+    sleep(1)
 
 
 def add_dev_holidays(service, config):
@@ -83,6 +85,7 @@ def add_dev_holidays(service, config):
             )
         )
     batch.execute()
+    sleep(1)
 
 
 def get_calendar_events(service, calendar_id):
@@ -94,6 +97,7 @@ def get_calendar_events(service, calendar_id):
         page_events = service.events().list(
             calendarId=calendar_id, pageToken=page_token, timeMin=start_time
         ).execute()
+        sleep(1)
         events += page_events['items']
         page_token = page_events.get('nextPageToken')
         if not page_token:
