@@ -43,17 +43,22 @@ def get_credentials():
     return credentials
 
 
-def clear_dev_calendar(calendar_events, config):
-    old_dev_holidays = get_calendar_events(calendar_events, config['calendar_ids']['dev'])
+def clear_dev_calendar(service, config):
+    old_dev_holidays = get_calendar_events(service, config['calendar_ids']['dev'])
 
+    batch = service.new_batch_http_request(callback=callback)
     for holiday in old_dev_holidays:
-        calendar_events.delete(
-            calendarId=config['calendar_ids']['dev'], eventId=holiday['id']
-        ).execute()
+        batch.add(
+            service.events().delete(
+                calendarId=config['calendar_ids']['dev'],
+                eventId=holiday['id']
+            )
+        )
+    batch.execute()
 
 
-def add_dev_holidays(calendar_events, config):
-    all_holidays = get_calendar_events(calendar_events, config['calendar_ids']['holiday'])
+def add_dev_holidays(service, config):
+    all_holidays = get_calendar_events(service, config['calendar_ids']['holiday'])
 
     dev_holidays = []
     for holiday in all_holidays:
@@ -69,17 +74,24 @@ def add_dev_holidays(calendar_events, config):
                 'end': {'date': holiday['end']['date']}
             })
 
+    batch = service.new_batch_http_request(callback=callback)
     for holiday in dev_holidays:
-        calendar_events.insert(calendarId=config['calendar_ids']['dev'], body=holiday).execute()
+        batch.add(
+            service.events().insert(
+                calendarId=config['calendar_ids']['dev'],
+                body=holiday
+            )
+        )
+    batch.execute()
 
 
-def get_calendar_events(calendar_events, calendar_id):
+def get_calendar_events(service, calendar_id):
     start_time = f'{datetime.now().year - 1}-01-01T00:00:00Z'
 
     events = []
     page_token = None
     while True:
-        page_events = calendar_events.list(
+        page_events = service.events().list(
             calendarId=calendar_id, pageToken=page_token, timeMin=start_time
         ).execute()
         events += page_events['items']
@@ -89,12 +101,17 @@ def get_calendar_events(calendar_events, calendar_id):
     return events
 
 
+def callback(request_id, response, exception):
+    if exception:
+        raise exception
+
+
 def main():
     config = get_config()
     service = build('calendar', 'v3', credentials=get_credentials())
 
-    clear_dev_calendar(service.events(), config)
-    add_dev_holidays(service.events(), config)
+    clear_dev_calendar(service, config)
+    add_dev_holidays(service, config)
 
 
 if __name__ == '__main__':
