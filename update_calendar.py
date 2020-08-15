@@ -50,9 +50,7 @@ def clear_dev_calendar(calendar_events, config):
 
     for holiday in old_dev_holidays:
         execute_or_exponential_backoff(
-            calendar_events.delete,
-            calendarId=config['calendar_ids']['dev'],
-            eventId=holiday['id']
+            calendar_events.delete(calendarId=config['calendar_ids']['dev'], eventId=holiday['id'])
         )
 
 
@@ -75,9 +73,7 @@ def add_dev_holidays(calendar_events, config):
 
     for holiday in dev_holidays:
         execute_or_exponential_backoff(
-            calendar_events.insert,
-            calendarId=config['calendar_ids']['dev'],
-            body=holiday
+            calendar_events.insert(calendarId=config['calendar_ids']['dev'], body=holiday)
         )
 
 
@@ -88,10 +84,7 @@ def get_calendar_events(calendar_events, calendar_id):
     page_token = None
     while True:
         page_events = execute_or_exponential_backoff(
-            calendar_events.list,
-            calendarId=calendar_id,
-            pageToken=page_token,
-            timeMin=start_time
+            calendar_events.list(calendarId=calendar_id, pageToken=page_token, timeMin=start_time)
         )
         events += page_events['items']
         page_token = page_events.get('nextPageToken')
@@ -100,10 +93,10 @@ def get_calendar_events(calendar_events, calendar_id):
     return events
 
 
-def execute_or_exponential_backoff(func, max_attempts=8, **kwargs):
+def execute_or_exponential_backoff(http_request, max_attempts=8):
     for i in range(max_attempts):
         try:
-            return func(**kwargs).execute()
+            return http_request.execute()
         except HttpError:
             if i < max_attempts - 1:
                 print(f'sleeping for {2 ** i} seconds.')
