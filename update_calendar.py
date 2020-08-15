@@ -3,8 +3,10 @@ import os.path
 import pickle
 
 from datetime import datetime
+from time import sleep
 
 from google.auth.transport.requests import Request
+from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -47,9 +49,9 @@ def clear_dev_calendar(calendar_events, config):
     old_dev_holidays = get_calendar_events(calendar_events, config['calendar_ids']['dev'])
 
     for holiday in old_dev_holidays:
-        calendar_events.delete(
-            calendarId=config['calendar_ids']['dev'], eventId=holiday['id']
-        ).execute()
+        execute_or_exponential_backoff(
+            calendar_events.delete(calendarId=config['calendar_ids']['dev'], eventId=holiday['id'])
+        )
 
 
 def add_dev_holidays(calendar_events, config):
@@ -70,7 +72,9 @@ def add_dev_holidays(calendar_events, config):
             })
 
     for holiday in dev_holidays:
-        calendar_events.insert(calendarId=config['calendar_ids']['dev'], body=holiday).execute()
+        execute_or_exponential_backoff(
+            calendar_events.insert(calendarId=config['calendar_ids']['dev'], body=holiday)
+        )
 
 
 def get_calendar_events(calendar_events, calendar_id):
@@ -79,14 +83,29 @@ def get_calendar_events(calendar_events, calendar_id):
     events = []
     page_token = None
     while True:
-        page_events = calendar_events.list(
-            calendarId=calendar_id, pageToken=page_token, timeMin=start_time
-        ).execute()
+        page_events = execute_or_exponential_backoff(
+            calendar_events.list(calendarId=calendar_id, pageToken=page_token, timeMin=start_time)
+        )
         events += page_events['items']
         page_token = page_events.get('nextPageToken')
         if not page_token:
             break
     return events
+
+
+def execute_or_exponential_backoff(http_request, max_sleep_seconds=64, max_attempts=10):
+    for i in range(max_attempts):
+        try:
+            return http_request.execute()
+        except HttpError as e:
+            is_4xx_status = 399 < e.resp.status < 500
+            are_attempts_remaining = i < max_attempts - 1
+
+            if is_4xx_status and are_attempts_remaining:
+                sleep(min(2 ** i, max_sleep_seconds))
+                continue
+
+            raise
 
 
 def main():
