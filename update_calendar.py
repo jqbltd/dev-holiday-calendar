@@ -99,9 +99,9 @@ def execute_or_exponential_backoff(http_request, max_sleep_seconds=64, max_attem
             return http_request.execute()
         except HttpError as e:
             is_4xx_status = 399 < e.resp.status < 500
-            attempts_remaining = i < max_attempts - 1
+            are_attempts_remaining = i < max_attempts - 1
 
-            if is_4xx_status and attempts_remaining:
+            if is_4xx_status and are_attempts_remaining:
                 sleep(min(2 ** i, max_sleep_seconds))
                 continue
 
