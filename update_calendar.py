@@ -93,14 +93,13 @@ def get_calendar_events(calendar_events, calendar_id):
     return events
 
 
-def execute_or_exponential_backoff(http_request, max_attempts=8):
+def execute_or_exponential_backoff(http_request, max_sleep_seconds=64, max_attempts=10):
     for i in range(max_attempts):
         try:
             return http_request.execute()
         except HttpError:
             if i < max_attempts - 1:
-                print(f'sleeping for {2 ** i} seconds.')
-                sleep(2 ** i)
+                sleep(min(2 ** i, max_sleep_seconds))
                 continue
             else:
                 raise
