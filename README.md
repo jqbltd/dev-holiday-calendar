@@ -10,4 +10,6 @@ Use `example.config.json` as a template to create a `config.json` file in the pr
 
 Install the pip requirements.
 
-When first running `update_calendar.py` you will have to authorise the app. It will create a `token.pickle` file.
+An authorised token is needed before the script can be used. Run `generate_token.py` to generate and authorise a token file called `token.pickle`.
+
+To update the calendar run `update_calendar.py`.

@@ -8,7 +8,6 @@ from time import sleep
 from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -33,11 +32,7 @@ def get_credentials():
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                CREDENTIALS_PATH,
-                ['https://www.googleapis.com/auth/calendar.events']
-            )
-            credentials = flow.run_console()
+            raise RuntimeError('A token needs to be generated.')
 
         with open(TOKEN_PICKLE_PATH, 'wb') as f:
             pickle.dump(credentials, f)
