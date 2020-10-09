@@ -54,12 +54,12 @@ def add_dev_holidays(calendar_events, config):
 
     dev_holidays = []
     for holiday in all_holidays:
-        try:
-            name = holiday['summary'].split('-')[1].strip()
-        except (IndexError, KeyError):
-            continue
-
-        if name in config['names']:
+        is_dev_holiday = False
+        for name in config['names']:
+            if name.lower() in holiday['summary'].lower():
+                is_dev_holiday = True
+        
+        if is_dev_holiday:
             dev_holidays.append({
                 'summary': holiday['summary'],
                 'start': {'date': holiday['start']['date']},
