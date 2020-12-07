@@ -55,8 +55,14 @@ def add_dev_holidays(calendar_events, config):
     dev_holidays = []
     for holiday in all_holidays:
         is_dev_holiday = False
+        
+        try:
+            summary = holiday['summary'].lower()
+        except KeyError:
+            continue
+        
         for name in config['names']:
-            if name.lower() in holiday['summary'].lower():
+            if name.lower() in summary:
                 is_dev_holiday = True
         
         if is_dev_holiday:
